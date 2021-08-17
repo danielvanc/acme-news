@@ -1,18 +1,10 @@
 /** @jsxImportSource @emotion/react */
 
 import React from 'react'
-import { useQuery } from "react-query";
-import client from 'utils/client'
+import { Spinner } from "components/lib";
+import { useFetchArticles } from "utils/hooks";
 import Article from 'components/article';
 import Pagination from 'components/pagination'
-import { Spinner } from "components/lib";
-
-function useFetchArticles(page = 0) {
-  return useQuery(['articles', page], async () => {
-    const { data } = await client(`${process.env.NEXT_PUBLIC_ARTICLES_API}${page}`)
-    return data;
-  }, { keepPreviousData: true, staleTime: 3000 })
-}
 
 export default function Home() {
   const [page, setPage] = React.useState(0)

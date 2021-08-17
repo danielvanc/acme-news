@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { QueryClient, useQuery } from 'react-query'
 import { dehydrate } from 'react-query/hydration'
-import client from 'utils/client';
+import { getPost } from 'utils/utils'
 import Comments from 'components/comments';
 interface CommentsProps {
   data: object
@@ -41,23 +41,6 @@ export default function ArticlePage(props: Props) {
     </div>
   )
 }
-
-async function getPost(url, token, articleId) {
-  const articles = await client(url, { token  })
-  let comments = []
-  const hasComments = articles?.data && articles.data.comments_count
-  
-  if (hasComments) {
-    const commentsApi = process.env.ARTICLE_COMMENTS_API;
-    const commentsUrl = `${commentsApi}${articleId}/comments/0`;
-    comments = await client(commentsUrl)
-  }
-
-  const data = [articles.data, hasComments ? comments.data : []]
-
-  return data;
-}
-
 
 /*
   Because of the nature of the way the API's are structured,
