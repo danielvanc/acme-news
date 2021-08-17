@@ -1,25 +1,41 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
+import React from 'react'
 import client from 'utils/client'
-import useSWR from 'swr'
+import { useRouter } from 'next/router';
+import Article from 'components/article';
+import Pagination from 'components/pagination'
 
-export default function Home({ data }) {
-
-  return (
-    <h1>Acme News</h1>
-  )
+async function getData(page: string) {
+  const articlesAPI = `${process.env.NEXT_PUBLIC_ARTICLES_API}${page}`
+  return await client(articlesAPI)
 }
 
-export async function getStaticProps() {
+export default function Home() {
+  const router = useRouter()
+  const { page: currentPage } = router.query
+  const [page, setPage] = React.useState(currentPage || 0)
+  const [articles, setArticles] = React.useState([])
 
-   const config = {
-    headers: { 'X-Tenant': 'androidworld.newsifier.com' }
-  }
-  const data = await client('https://microservice.newsifier.com/api/v1/article/scopes/lat/1/0', config)
+  React.useEffect(() => {
+    getData(page).then(setArticles)
+  }, [page])
 
-  return {
-    props: {
-      data
-    }
-  }
+  React.useEffect(() => {
+    if (articles) console.log('articles', articles)
+  }, [articles])
+
+  return (
+    <div>
+      <h1>Acme News</h1>
+
+      {articles && articles?.data && (
+        <div>
+          {articles.data.map(article => (
+            <Article article={article} key={article.id} page={page} />
+          ))}
+        </div>
+      )}
+
+      <Pagination page={page} setPage={setPage} />
+    </div>
+  )
 }

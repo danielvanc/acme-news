@@ -12,16 +12,14 @@ export default async function client(
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
       'Content-Type': data ? 'application/json' : "",
+      'X-Tenant': 'androidworld.newsifier.com',
       ...customHeaders,
     },
     ...customConfig,
   }
 
   return axios(config).then(async response => {
-    // console.log('response', response);
     if (response.status === 401) {
-      // refresh the page for them
-      window.location.assign(window.location)
       return Promise.reject({message: 'Error communicating with API.'})
     }
     if (response.status === 200) {
