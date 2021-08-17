@@ -1,10 +1,9 @@
 import React from 'react'
-import type { AppProps /*, AppContext */ } from 'next/app'
 import Link from 'next/link'
-import { useRouter } from 'next/router';
+import { QueryClient, useQuery } from 'react-query'
+import { dehydrate } from 'react-query/hydration'
 import client from 'utils/client';
 import Comments from 'components/comments';
-
 interface CommentsProps {
   data: object
 }
@@ -19,16 +18,14 @@ type Props = {
   data: Array<ArticleProps>
 }
 
-export default function Article(props: Props) {
-  const router = useRouter();
-  const { page } = router.query;
-  const backLink = page ? `/?page=${page}` : '/'
+export default function ArticlePage(props: Props) {
+  const { data } = useQuery('posts', getPost)
+  const { title, content } = data[0]
   const type = "paragraph"
-  const { title, content } = props.data[0];
 
   return (
     <div>
-      <Link href={backLink}><a>Back to previous page</a></Link>
+      <Link href="/"><a>Back to articles</a></Link>
       <h1>{title}</h1>
       {content
         .filter(contentType => contentType.type === type)
@@ -40,9 +37,25 @@ export default function Article(props: Props) {
           />
         )
         })}
-      <Comments />
+      <Comments comments={data[1]} />
     </div>
   )
+}
+
+async function getPost(url, token, articleId) {
+  const articles = await client(url, { token  })
+  let comments = []
+  const hasComments = articles?.data && articles.data.comments_count
+  
+  if (hasComments) {
+    const commentsApi = process.env.ARTICLE_COMMENTS_API;
+    const commentsUrl = `${commentsApi}${articleId}/comments/0`;
+    comments = await client(commentsUrl)
+  }
+
+  const data = [articles.data, hasComments ? comments.data : []]
+
+  return data;
 }
 
 
@@ -57,26 +70,17 @@ export default function Article(props: Props) {
   only alternative was to get by server request.
 */ 
 export async function getServerSideProps(context) {
-  // TODO: Use caching for this?
+  const queryClient = new QueryClient()
   const articleApi = process.env.ARTICLE_API
   const articleId = context.params.id;
   const url = `${articleApi}${articleId}?include=clapsCount,commentsCount`
   const token = process.env.ARTICLE_TOKEN
-  const articles = await client(url, { token })
 
-  const hasComments = articles?.data && articles.data.comments_count
-  let comments = 0
-
-  // Only fetch comments if there are any
-  if (hasComments) {
-    const commentsApi = process.env.ARTICLE_COMMENTS_API;
-    const commentsUrl = `${commentsApi}${articleId}/comments/0`
-    comments = await client(commentsUrl)
-  }
-
-  const data = [articles.data, hasComments ? comments.data : []]
-
+  await queryClient.prefetchQuery('posts', () => getPost(url, token, articleId))
+ 
   return {
-    props: { data }
+    props: {
+      dehydratedState: dehydrate(queryClient),
+    },
   }
 }

@@ -1,36 +1,37 @@
+/** @jsxImportSource @emotion/react */
+
 import React from 'react'
+import { useQuery } from "react-query";
 import client from 'utils/client'
-import { useRouter } from 'next/router';
 import Article from 'components/article';
 import Pagination from 'components/pagination'
+import { Spinner } from "components/lib";
 
-async function getData(page: string) {
-  const articlesAPI = `${process.env.NEXT_PUBLIC_ARTICLES_API}${page}`
-  return await client(articlesAPI)
+function useFetchArticles(page = 0) {
+  return useQuery(['articles', page], async () => {
+    const { data } = await client(`${process.env.NEXT_PUBLIC_ARTICLES_API}${page}`)
+    return data;
+  }, { keepPreviousData: true, staleTime: 3000 })
 }
 
 export default function Home() {
-  const router = useRouter()
-  const { page: currentPage } = router.query
-  const [page, setPage] = React.useState(currentPage || 0)
-  const [articles, setArticles] = React.useState([])
-
-  React.useEffect(() => {
-    getData(page).then(setArticles)
-  }, [page])
-
-  React.useEffect(() => {
-    if (articles) console.log('articles', articles)
-  }, [articles])
+  const [page, setPage] = React.useState(0)
+  const { data, isLoading, isSuccess } = useFetchArticles(page)
 
   return (
     <div>
       <h1>Acme News</h1>
 
-      {articles && articles?.data && (
+      {isLoading && (
+        <div css={{ width: "100%", margin: "auto" }}>
+          <Spinner />
+        </div>
+      )}
+
+      {(isSuccess) && (
         <div>
-          {articles.data.map(article => (
-            <Article article={article} key={article.id} page={page} />
+          {data.map(article => (
+            <Article article={article} key={article.id} />
           ))}
         </div>
       )}
