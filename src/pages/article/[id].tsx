@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { QueryClient, useQuery } from 'react-query'
 import { dehydrate } from 'react-query/hydration'
 import { getPost } from 'utils/utils'
+import { StyledContainer } from "components/lib";
 import Comments from 'components/comments';
 interface CommentsProps {
   data: object
@@ -24,21 +25,27 @@ export default function ArticlePage(props: Props) {
   const type = "paragraph"
 
   return (
-    <div>
-      <Link href="/"><a>Back to articles</a></Link>
-      <h1>{title}</h1>
-      {content
-        .filter(contentType => contentType.type === type)
-        .map((item, index) => {
-        return (
-          <p
-            key={index}
-            dangerouslySetInnerHTML={{ __html: item.data.text }}
-          />
-        )
-        })}
-      <Comments comments={data[1]} />
-    </div>
+    <StyledContainer>
+      <Link href="/"><a className="button-back">Back to articles</a></Link>
+      <article className="full-article">
+        <header>
+          <h1>{title}</h1>
+        </header>
+        {content
+          .filter(contentType => contentType.type === type)
+          .map((item, index) => {
+          return (
+            <p
+              key={index}
+              dangerouslySetInnerHTML={{ __html: item.data.text }}
+            />
+          )
+          })}
+        <footer>
+          <Comments comments={data[1]} />
+        </footer>
+      </article>
+    </StyledContainer>
   )
 }
 

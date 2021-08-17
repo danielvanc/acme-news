@@ -1,4 +1,5 @@
 import React from 'react'
+import { StyledButton } from "components/lib";
 
 interface Props {
   page: number,
@@ -17,8 +18,8 @@ export default function Pagination({ page, setPage }: Props) {
   }
   return (
     <div>
-      {page > 0 && <button onClick={handlePrevClick}>Previous page</button>}
-      <button onClick={handleNextClick}>Next page</button>
+      {page > 0 && <StyledButton onClick={handlePrevClick}>Previous page</StyledButton>}
+      <StyledButton onClick={handleNextClick}>Next page</StyledButton>
     </div>
   )
 }
